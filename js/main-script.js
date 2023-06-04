@@ -8,20 +8,7 @@ var mesh, geometry;
 var clock;
 
 // objects
-var ovni;
-
-/////////////////////
-/* CREATE SCENE(S) */
-/////////////////////
-function createScene() {
-	'use strict';
-
-}
-
-//////////////////////
-/* CREATE CAMERA(S) */
-//////////////////////
-
+var ovni, plane;
 
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -31,6 +18,36 @@ function createAmbientLight() {
 
 	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 3 }); // soft white light
 	scene.add(light);
+}
+
+//////////////////////////////////////
+/* CREATE THE PLANE AND THE SKYDOME */
+//////////////////////////////////////
+function createPlane() {
+	'use strict';
+
+	plane = new THREE.Object3D();
+
+	var lambert_material = new THREE.MeshLambertMaterial({ color: 0x585c3d, emissive: 0x22331e });
+	var phong_material = new THREE.MeshPhongMaterial({ color: 0xffaa22, emissive: 0x242923, specular: 15, shininess: 5 });
+	var toon_material = new THREE.MeshToonMaterial({ color: 0xffaa22 });
+/*
+	var disMap = new THREE.TextureLoader().setPath("images/").load("heightmap.png");
+	disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
+	disMap.repeat.set(100, 100);
+*/
+	plane.userData = {
+		materials: { lambert_material, phong_material, toon_material }
+	}
+
+	geometry = new THREE.PlaneGeometry(window.innerWidth, window.innerHeight, 30, 30 );
+	mesh = new THREE.Mesh(geometry, plane.userData.materials.lambert_material);
+	mesh.rotation.x = -Math.PI / 2;
+	mesh.position.set(0, -10, 0);
+	plane.add(mesh);
+	
+	scene.add(plane);
+
 }
 
 ////////////////////////
@@ -67,6 +84,9 @@ function createOVNIcylinder(obj, x, y, z) {
 	geometry = new THREE.CylinderGeometry(ud.r_cylinder, ud.r_cylinder, ud.h_cylinder);
 	mesh = new THREE.Mesh(geometry, ud.materials_cc.lambert_material_cc);
 	mesh.position.set(x, y, z);
+	mesh.add(ud.spotLight);
+	scene.add(ud.spotLight.target);
+	ud.spotLight.target.position.set(x, y - 100, z);
 	obj.add(mesh);
 }
 
@@ -78,6 +98,7 @@ function createOVNIlight(obj, x, y, z) {
 	geometry = new THREE.SphereGeometry(ud.r_light);
 	mesh = new THREE.Mesh(geometry, ud.materials_light.lambert_material_light);
 	mesh.position.set(x, y, z);
+	mesh.add(ud.pointLight);
 	obj.add(mesh);
 }
 
@@ -106,7 +127,9 @@ function createOVNI(x, y, z) {
 		r_light: 1,
 		y_rotate: Math.PI / 2,
 		move_plus_x: false, move_minus_x: false, move_plus_z: false, move_minus_z: false,
-		velocity: 10
+		velocity: 10,
+		pointLight: new THREE.PointLight({ color: 0x610000, intensity: 2 }), pointLightsChange: false, pointLightsChanged: false,
+		spotLight: new THREE.SpotLight({ color: 0x323857, intensity: 5 }), spotLightChange: false, spotLightChanged: false
 	};
 
 	createOVNIbody(ovni, 0, 0, 0);
@@ -124,79 +147,6 @@ function createOVNI(x, y, z) {
 ////////////
 /* UPDATE */
 ////////////
-function update() {
-	'use strict';
-
-}
-
-/////////////
-/* DISPLAY */
-/////////////
-function render() {
-	'use strict';
-
-	renderer.render(scene, camera);
-}
-
-function createCamera() {
-	'use strict';
-
-	//perspective camera
-	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-	camera.position.x = 10;
-	camera.position.y = -40;
-	camera.position.z = 10;
-	camera.lookAt(scene.position);
-}
-
-function createScene() {
-	'use strict';
-
-	scene = new THREE.Scene();
-
-	scene.add(new THREE.AxesHelper(50));
-	//scene.background = new THREE.Color(0xfffefe);
-
-	createAmbientLight();
-	createOVNI(0, 0, 0);
-}
-
-////////////////////////////////
-/* INITIALIZE ANIMATION CYCLE */
-////////////////////////////////
-function init() {
-	'use strict';
-
-	renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	document.body.appendChild(renderer.domElement);
-
-	createScene();
-	createCamera();
-
-	clock = new THREE.Clock();
-
-	window.addEventListener("keydown", onKeyDown);
-	window.addEventListener("keyup", onKeyUp);
-	window.addEventListener("resize", onResize);
-}
-
-/////////////////////
-/* ANIMATION CYCLE */
-/////////////////////
-function animate() {
-	'use strict';
-
-	var delta = clock.getDelta();
-
-	rotateOVNI(delta);
-	moveOVNI(delta);
-
-	render();
-
-	requestAnimationFrame(animate);
-}
-
 function rotateOVNI(delta) {
 	'use strict';
 
@@ -229,10 +179,110 @@ function moveOVNI(delta) {
 	if (z_motion != 0 || x_motion != 0) {
 		const v = new THREE.Vector3(x_motion, 0, z_motion).normalize();
 		ovni.position.x += v.x * ud.velocity * delta;
-		ovni.position.y += v.y * ud.velocity * delta;
 		ovni.position.z += v.z * ud.velocity * delta;
+		ud.spotLight.target.position.x += v.x * ud.velocity * delta;
+		ud.spotLight.target.position.z += v.z * ud.velocity * delta;
 	}
 
+}
+
+function handleOVNILights() {
+	'use strict';
+
+	const ud = ovni.userData;
+
+	if (ud.pointLightsChange && !ud.pointLightsChanged) {
+		ud.pointLight.visible = !ud.pointLight.visible;
+		ud.pointLightsChanged = true;
+	}
+	if (!ud.pointLightsChange && ud.pointLightsChanged) {
+		ud.pointLightsChanged = false;
+	}
+
+	if (ud.spotLightChange && !ud.spotLightChanged) {
+		ud.spotLight.visible = !ud.spotLight.visible;
+		ud.spotLightChanged = true;
+	}
+	if (!ud.spotLightChange && ud.spotLightChanged) {
+		ud.spotLightChanged = false;
+	}
+
+}
+
+/////////////
+/* DISPLAY */
+/////////////
+function render() {
+	'use strict';
+
+	renderer.render(scene, camera);
+}
+
+//////////////////////
+/* CREATE CAMERA(S) */
+//////////////////////
+function createCamera() {
+	'use strict';
+
+	//perspective camera
+	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.x = 300;
+	camera.position.y = 500;
+	camera.position.z = 300;
+	camera.lookAt(scene.position);
+}
+
+/////////////////////
+/* CREATE SCENE(S) */
+/////////////////////
+function createScene() {
+	'use strict';
+
+	scene = new THREE.Scene();
+
+	scene.add(new THREE.AxesHelper(50));
+	//scene.background = new THREE.Color(0xfffefe);
+
+	createPlane();
+	createAmbientLight();
+	createOVNI(0, 30, 0);
+}
+
+////////////////////////////////
+/* INITIALIZE ANIMATION CYCLE */
+////////////////////////////////
+function init() {
+	'use strict';
+
+	renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+
+	createScene();
+	createCamera();
+
+	clock = new THREE.Clock();
+
+	window.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keyup", onKeyUp);
+	window.addEventListener("resize", onResize);
+}
+
+/////////////////////
+/* ANIMATION CYCLE */
+/////////////////////
+function animate() {
+	'use strict';
+
+	var delta = clock.getDelta();
+
+	rotateOVNI(delta);
+	moveOVNI(delta);
+	handleOVNILights();
+
+	render();
+
+	requestAnimationFrame(animate);
 }
 
 ////////////////////////////
@@ -241,6 +291,12 @@ function moveOVNI(delta) {
 function onResize() {
 	'use strict';
 
+	renderer.setSize(window.innerWidth, window.innerHeight);
+
+	if (window.innerHeight > 0 && window.innerWidth > 0) {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+	}
 }
 
 ///////////////////////
@@ -261,6 +317,14 @@ function onKeyDown(e) {
 			break;
 		case 39: // arrow-right
 			ovni.userData.move_plus_x = true;
+			break;
+		case 80: // P
+		case 112: // p
+			ovni.userData.pointLightsChange = true;
+			break;
+		case 83: // S
+		case 115: // s
+			ovni.userData.spotLightChange = true;
 			break;
 	}
 
@@ -284,6 +348,14 @@ function onKeyUp(e) {
 			break;
 		case 39: // arrow-right
 			ovni.userData.move_plus_x = false;
+			break;
+		case 80: // P
+		case 112: // p
+			ovni.userData.pointLightsChange = false;
+			break;
+		case 83: // S
+		case 115: // s
+			ovni.userData.spotLightChange = false;
 			break;
 	}
 
