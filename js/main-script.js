@@ -327,7 +327,7 @@ function createTreeCanopy(obj, x, y, z){
 	geometry = new THREE.SphereGeometry(1.7, 32, 16);
 	geometry.scale(2, 0.1, 2);
 	mesh = new THREE.Mesh(geometry, darkGreenMaterial);
-	mesh.position.set(x-1.3, y+9 , z+1.3);
+	mesh.position.set(x-2, y+9 , z+1.3);
 	obj.add(mesh);
 }
 
