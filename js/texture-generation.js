@@ -64,7 +64,7 @@ function createScene() {
 	scene.background = new THREE.Color(0xffeeff);
 
 	createLight();
-	createGroundTexture();
+	//createGroundTexture();
 }
 
 function createCamera() {

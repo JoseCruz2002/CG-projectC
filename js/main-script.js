@@ -8,7 +8,8 @@ var mesh, geometry;
 var clock;
 
 // objects
-var ovni, plane;
+var ovni, plane, moon, moonDirectionalLight, isDirectionalLightOn = false, corkTree;
+
 
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -16,9 +17,10 @@ var ovni, plane;
 function createAmbientLight() {
 	'use strict';
 
-	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 3 }); // soft white light
+	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 2 }); // soft white light
 	scene.add(light);
 }
+
 
 //////////////////////////////////////
 /* CREATE THE PLANE AND THE SKYDOME */
@@ -144,6 +146,129 @@ function createOVNI(x, y, z) {
 	scene.add(ovni);
 }
 
+
+function createMoonBody(obj, x, y, z) {
+	'use strict';
+	
+	const moon_material = new THREE.MeshPhongMaterial({
+		color: 0xffd45f, // Set the color to moon yellow
+		emissive: 0xffd45f, // Set the emissive color to moon yellow
+		emissiveIntensity: 0.5, // Increase the emissive intensity for brightness
+	  });
+	  
+	
+	geometry = new THREE.SphereGeometry(5, 32, 32);
+	mesh = new THREE.Mesh(geometry, moon_material);
+	mesh.position.set(x, y, z);
+	obj.add(mesh);
+
+}
+
+function toggleDirectionalLight() {
+	isDirectionalLightOn = !isDirectionalLightOn;
+	moonDirectionalLight.visible = isDirectionalLightOn;
+  }
+
+function createMoonLight(obj, x, y, z) {
+	'use strict';
+	moonDirectionalLight = new THREE.DirectionalLight(0xffd45f, 1);
+	moonDirectionalLight.visible = isDirectionalLightOn;
+    moonDirectionalLight.position.set(x, y, z); // Set the position of the light source
+	obj.add(moonDirectionalLight);
+	
+}
+
+function createMoon(x, y, z){
+	'use strict';
+
+	moon = new THREE.Object3D();
+
+	createMoonBody(moon, x, y, z);
+	createMoonLight(moon ,1, 1, 1);
+	
+	scene.add(moon);
+}
+
+function createBranchCanopy(obj, x, y, z){
+	'use strict';
+
+	const darkGreenMaterial = new THREE.MeshBasicMaterial({
+		color: 0x006400
+	  });
+	  
+
+	geometry = new THREE.SphereGeometry(1.7, 32, 16);
+	geometry.scale(1.5, 0.5, 0.5);
+	mesh = new THREE.Mesh(geometry, darkGreenMaterial);
+	mesh.position.set(x+3.7, y+7 , z);
+	obj.add(mesh);
+}
+
+
+function createTreeCanopy(obj, x, y, z){
+	'use strict';
+
+	const darkGreenMaterial = new THREE.MeshBasicMaterial({
+		color: 0x006400
+	  });
+	  
+
+	geometry = new THREE.SphereGeometry(1.7, 32, 16);
+	geometry.scale(2, 0.1, 2);
+	mesh = new THREE.Mesh(geometry, darkGreenMaterial);
+	mesh.position.set(x-1.3, y+9 , z+1.3);
+	obj.add(mesh);
+}
+
+
+
+
+function createTreebranch(obj, x, y, z){
+	'use strict';
+
+	const brownishOrangeMaterial = new THREE.MeshBasicMaterial({
+  	color: 0xB99571
+	});
+
+	geometry = new THREE.CylinderGeometry( 0.5, 0.5, 7, 20 );
+	mesh = new THREE.Mesh(geometry, brownishOrangeMaterial);
+	mesh.position.set(x+1, y +2.5, z-1);
+	mesh.rotation.z = -Math.PI / 6 ;	
+	
+	obj.add(mesh);
+}
+
+function createTreeTrunk(obj, x, y, z){
+	'use strict';
+
+	const brownishOrangeMaterial = new THREE.MeshBasicMaterial({
+  	color: 0xB99571
+	});
+
+	geometry = new THREE.CylinderGeometry( 1, 1, 12, 20 );
+	mesh = new THREE.Mesh(geometry, brownishOrangeMaterial);
+	mesh.position.set(x, y, z);
+	mesh.rotation.z = Math.PI / 6;	
+	
+	obj.add(mesh);
+}
+
+
+function createCorkTree(x, y, z){
+	'use strict';
+
+	corkTree = new THREE.Object3D();
+
+	createTreeTrunk(corkTree, x, y, z);
+	createTreebranch(corkTree, x, y, z);
+	createTreeCanopy(corkTree, x, y, z);
+	createBranchCanopy(corkTree, x, y, z);
+	
+	scene.add(corkTree);
+}
+
+
+
 ////////////
 /* UPDATE */
 ////////////
@@ -226,10 +351,12 @@ function createCamera() {
 
 	//perspective camera
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+	
 	camera.position.x = 300;
 	camera.position.y = 500;
 	camera.position.z = 300;
 	camera.lookAt(scene.position);
+	
 }
 
 /////////////////////
@@ -246,6 +373,11 @@ function createScene() {
 	createPlane();
 	createAmbientLight();
 	createOVNI(0, 30, 0);
+	createMoon(-30,60,30);
+	createCorkTree(0, 0, 40);
+	createCorkTree(40, 0, 0);
+	createCorkTree(40, 0, 40);
+
 }
 
 ////////////////////////////////
@@ -260,6 +392,8 @@ function init() {
 
 	createScene();
 	createCamera();
+	camera.zoom = 7;
+	camera.updateProjectionMatrix();
 
 	clock = new THREE.Clock();
 
@@ -318,6 +452,10 @@ function onKeyDown(e) {
 		case 39: // arrow-right
 			ovni.userData.move_plus_x = true;
 			break;
+		case 68: //D
+        case 100: //d
+			toggleDirectionalLight();
+            break;
 		case 80: // P
 		case 112: // p
 			ovni.userData.pointLightsChange = true;
