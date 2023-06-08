@@ -7,7 +7,7 @@ var mesh, geometry;
 
 var clock;
 
-var planeCanvas, skydomeCanvas, planeTexture, skydomeTexture;
+var planeTexture, skydomeTexture;
 
 // objects
 var ovni, plane, skydome;
@@ -18,144 +18,59 @@ var ovni, plane, skydome;
 function createAmbientLight() {
 	'use strict';
 
-	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 3 }); // soft white light
+	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 1 }); // soft white light
 	scene.add(light);
 }
-
-///////////////////
-/* CREATE CANVAS */
-///////////////////
-function createPlaneCanvas() {
-	'use strict';
-
-	planeCanvas = document.createElement('canvas');
-	var ctx = planeCanvas.getContext('2d');
-
-	document.body.appendChild(planeCanvas);
-
-	planeCanvas.width = 256;
-	planeCanvas.height = 256;
-
-	ctx.fillStyle = '#008F4D';
-	ctx.fillRect(0, 0, planeCanvas.width, planeCanvas.height);
-
-	const flowerColors = ['#ffffff', '#fec901', '#b57edc', '#ADD8E6'];
-	const FLOWER_RADIUS = 0.8;
-
-	for (let i = 0; i < flowerColors.length; i++) {
-		ctx.fillStyle = flowerColors[i];
-		ctx.beginPath();
-
-		for (let j = 0; j < 100; j++) {
-			const coords = { x: Math.random() * planeCanvas.width, y: Math.random() * planeCanvas.height };
-			ctx.save();
-			ctx.translate(coords.x + FLOWER_RADIUS, coords.y);
-			ctx.moveTo(0, 0);
-			ctx.arc(0, 0, FLOWER_RADIUS, 0, Math.PI * 2);
-			ctx.restore();
-		}
-
-		ctx.stroke();
-		ctx.fill();
-	}
-
-}
-
-function createSkydomeCanvas() {
-	'use strict';
-
-	skydomeCanvas = document.createElement('canvas');
-	var ctx = skydomeCanvas.getContext('2d');
-
-	document.body.appendChild(skydomeCanvas);
-
-	skydomeCanvas.width = 256;
-	skydomeCanvas.height = 256;
-
-	ctx.fillStyle = '#0b0b45';
-	ctx.fillRect(0, 0, skydomeCanvas.width, skydomeCanvas.height);
-
-	const starsColor = '#ffffff';
-	const STAR_RADIUS = 0.8;
-
-	ctx.fillStyle = starsColor;
-	ctx.beginPath();
-
-	for (let i = 0; i < 100; i++) {
-		const coords = { x: Math.random() * skydomeCanvas.width, y: Math.random() * skydomeCanvas.height };
-		ctx.save();
-		ctx.translate(coords.x + STAR_RADIUS, coords.y);
-		ctx.moveTo(0, 0);
-		ctx.arc(0, 0, STAR_RADIUS, 0, Math.PI * 2);
-		ctx.restore();
-	}
-
-	ctx.stroke();
-	ctx.fill();
-
-}
-
 
 //////////////////////////////////////
 /* CREATE THE PLANE AND THE SKYDOME */
 //////////////////////////////////////
-function createPlane() {
+function createPlane(x, y, z) {
 	'use strict';
 
 	plane = new THREE.Object3D();
 
 	geometry = new THREE.PlaneGeometry(window.innerWidth / 2, window.innerHeight / 2, 30, 30);
 
-	planeTexture = new THREE.CanvasTexture(planeCanvas);
-	planeTexture.magFilter = THREE.NearestFilter;
-	planeTexture.minFilter = THREE.NearestFilter;
-	planeTexture.wrapS = planeTexture.wrapT = THREE.RepeatWrapping;
-	planeTexture.repeat.set(4, 4);
-
 	var disMap = new THREE.TextureLoader().setPath("images/").load("heightmap.png");
 	disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
 	disMap.repeat.set(10, 10);
 
-	var lambert_material = new THREE.MeshLambertMaterial({ map: planeTexture });
-	var standart_material = new THREE.MeshStandardMaterial({ map : planeTexture, displacementMap: disMap, displacementScale: 140 })
+	var lambert_material = new THREE.MeshLambertMaterial({ color: 0x009900, displacementMap: disMap, displacementScale: 200 });
 	var phong_material = new THREE.MeshPhongMaterial({ color: 0xffaa22, emissive: 0x242923, specular: 15, shininess: 5 });
 	var toon_material = new THREE.MeshToonMaterial({ color: 0xffaa22 });
 
 	plane.userData = {
-		materials: { lambert_material, standart_material, phong_material, toon_material }
+		materials: { lambert_material, phong_material, toon_material },
+		apllyPlaneTexture: false
 	}
 
-	mesh = new THREE.Mesh(geometry, plane.userData.materials.standart_material);
+	mesh = new THREE.Mesh(geometry, plane.userData.materials.lambert_material);
 	mesh.rotation.x = -Math.PI / 2;
-	mesh.position.set(0, -10, 0);
+	mesh.position.set(x, y, z);
 	plane.add(mesh);
 
 	scene.add(plane);
 
 }
 
-function createSkydome() {
+function createSkydome(x, y, z) {
 	'use strict';
 
 	skydome = new THREE.Object3D();
 
-	skydomeTexture = new THREE.CanvasTexture(skydomeCanvas);
-	skydomeTexture.magFilter = THREE.NearestFilter;
-	skydomeTexture.minFilter = THREE.NearestFilter;
-	skydomeTexture.wrapS = skydomeTexture.wrapT = THREE.RepeatWrapping;
-	skydomeTexture.repeat.set(4, 4);
-
-	var lambert_material = new THREE.MeshLambertMaterial({ map: skydomeTexture });
+	var lambert_material = new THREE.MeshLambertMaterial({ color: 0x000099 });
 	var phong_material = new THREE.MeshPhongMaterial({ color: 0xffaa22, emissive: 0x242923, specular: 15, shininess: 5 });
 	var toon_material = new THREE.MeshToonMaterial({ color: 0xffaa22 });
 
 	skydome.userData = {
-		materials: { lambert_material, phong_material, toon_material }
+		materials: { lambert_material, phong_material, toon_material },
+		applySkydomeTexture: false
 	}
 
-	geometry = new THREE.SphereGeometry(150, 32, 16, 0, Math.PI * 2, Math.PI, Math.PI);
+	geometry = new THREE.SphereGeometry(250, 32, 16, 0, Math.PI * 2, Math.PI, Math.PI);
 	mesh = new THREE.Mesh(geometry, skydome.userData.materials.lambert_material);
-	mesh.position.set(0, -2, 0);
+	mesh.position.set(x, y, z);
 	skydome.add(mesh);
 
 	scene.add(skydome);
@@ -197,20 +112,18 @@ function createOVNIcylinder(obj, x, y, z) {
 	mesh = new THREE.Mesh(geometry, ud.materials_cc.lambert_material_cc);
 	mesh.position.set(x, y, z);
 	mesh.add(ud.spotLight);
-	scene.add(ud.spotLight.target);
-	ud.spotLight.target.position.set(x, y - 10, z);
 	obj.add(mesh);
 }
 
-function createOVNIlight(obj, x, y, z) {
+function createOVNIlight(obj, x, y, z, light) {
 	'use strict';
 
 	var ud = obj.userData;
 
 	geometry = new THREE.SphereGeometry(ud.r_light);
 	mesh = new THREE.Mesh(geometry, ud.materials_light.lambert_material_light);
+	mesh.add(ud.pointLights[light]);
 	mesh.position.set(x, y, z);
-	mesh.add(ud.pointLight);
 	obj.add(mesh);
 }
 
@@ -229,6 +142,11 @@ function createOVNI(x, y, z) {
 	var toon_material_cc = new THREE.MeshToonMaterial({ color: 0x323857 });
 	var toon_material_light = new THREE.MeshToonMaterial({ color: 0x610000 });
 
+	var pointLight1 = new THREE.PointLight({ distance: 200 });
+	var pointLight2 = new THREE.PointLight({ distance: 200 });
+	var pointLight3 = new THREE.PointLight({ distance: 200 });
+	var pointLight4 = new THREE.PointLight({ distance: 200 });
+
 	ovni.userData = {
 		materials_body: { lambert_material_body, phong_material_body, toon_material_body },
 		materials_cc: { lambert_material_cc, phong_material_cc, toon_material_cc },
@@ -240,17 +158,28 @@ function createOVNI(x, y, z) {
 		y_rotate: Math.PI / 2,
 		move_plus_x: false, move_minus_x: false, move_plus_z: false, move_minus_z: false,
 		velocity: 30,
-		pointLight: new THREE.PointLight({ color: 0x610000, intensity: 2 }), pointLightsChange: false, pointLightsChanged: false,
-		spotLight: new THREE.SpotLight({ color: 0x323857, intensity: 5, angle: Math.PI / 4 }), spotLightChange: false, spotLightChanged: false
+		pointLights: [pointLight1, pointLight2, pointLight3, pointLight4],
+		pointLightsChange: false, pointLightsChanged: false,
+		spotLight: new THREE.SpotLight({ color: 0x323857, intensity: 10, distance: 100 }), spotLightChange: false, spotLightChanged: false
 	};
+
+	scene.add(ovni.userData.spotLight.target);
+	ovni.userData.spotLight.target.position.set(0, -10, 0);
+	ovni.userData.spotLight.angle = Math.PI / 5;
+	scene.add(ovni.userData.spotLight);
+
+	for (let i = 0; i < ovni.userData.pointLights.length; i++) {
+		ovni.userData.pointLights[i].intensity = 0.1;
+		scene.add(ovni.userData.pointLights[i]);
+	}
 
 	createOVNIbody(ovni, 0, 0, 0);
 	createOVNIcockpit(ovni, 0, ovni.userData.h_body, 0);
 	createOVNIcylinder(ovni, 0, -ovni.userData.h_body, 0);
-	createOVNIlight(ovni, 0, -ovni.userData.h_body / 1.6, ovni.userData.r_body / 1.5);
-	createOVNIlight(ovni, ovni.userData.r_body / 1.5, -ovni.userData.h_body / 1.6, 0);
-	createOVNIlight(ovni, 0, -ovni.userData.h_body / 1.6, -ovni.userData.r_body / 1.5);
-	createOVNIlight(ovni, -ovni.userData.r_body / 1.5, -ovni.userData.h_body / 1.6, 0);
+	createOVNIlight(ovni, 0, -ovni.userData.h_body / 1.6, ovni.userData.r_body / 1.5, 0);
+	createOVNIlight(ovni, ovni.userData.r_body / 1.5, -ovni.userData.h_body / 1.6, 0, 1);
+	createOVNIlight(ovni, 0, -ovni.userData.h_body / 1.6, -ovni.userData.r_body / 1.5, 2);
+	createOVNIlight(ovni, -ovni.userData.r_body / 1.5, -ovni.userData.h_body / 1.6, 0, 3);
 
 	ovni.position.set(x, y, z);
 	scene.add(ovni);
@@ -273,19 +202,15 @@ function moveOVNI(delta) {
 	var z_motion = 0, x_motion = 0;
 
 	if (ud.move_minus_z) {
-		//ovni.position.z -= ud.velocity * delta;
 		z_motion -= 1;
 	}
 	if (ud.move_plus_z) {
-		//ovni.position.z += ud.velocity * delta;
 		z_motion += 1;
 	}
 	if (ud.move_minus_x) {
-		//ovni.position.x -= ud.velocity * delta;
 		x_motion -= 1;
 	}
 	if (ud.move_plus_x) {
-		//ovni.position.x += ud.velocity * delta;
 		x_motion += 1;
 	}
 	if (z_motion != 0 || x_motion != 0) {
@@ -304,7 +229,9 @@ function handleOVNILights() {
 	const ud = ovni.userData;
 
 	if (ud.pointLightsChange && !ud.pointLightsChanged) {
-		ud.pointLight.visible = !ud.pointLight.visible;
+		for (let i = 0; i < ud.pointLights.length; i++) {
+			ud.pointLights[i].visible = !ud.pointLights[i].visible;
+		}
 		ud.pointLightsChanged = true;
 	}
 	if (!ud.pointLightsChange && ud.pointLightsChanged) {
@@ -321,6 +248,44 @@ function handleOVNILights() {
 
 }
 
+function createPlaneTexture() {
+	'use strict';
+
+	const ud = plane.userData;
+
+	if (ud.apllyPlaneTexture) {
+		planeTexture = new THREE.TextureLoader().load("images/groundTexture.png");
+		planeTexture.magFilter = THREE.NearestFilter;
+		planeTexture.minFilter = THREE.NearestFilter;
+		planeTexture.wrapS = planeTexture.wrapT = THREE.RepeatWrapping;
+		planeTexture.repeat.set(4, 4);
+
+		ud.materials.lambert_material.map = planeTexture;
+		ud.materials.lambert_material.color = 0x000000;
+		ud.materials.lambert_material.needsUpdate = true;
+		ud.apllyPlaneTexture = false;
+	}
+}
+
+function createSkydomeTexture() {
+	'use strict';
+
+	const ud = skydome.userData;
+
+	if (ud.applySkydomeTexture) {
+		skydomeTexture = new THREE.TextureLoader().load("images/skydomeTexture.png");
+		skydomeTexture.magFilter = THREE.NearestFilter;
+		skydomeTexture.minFilter = THREE.NearestFilter;
+		skydomeTexture.wrapS = skydomeTexture.wrapT = THREE.RepeatWrapping;
+		skydomeTexture.repeat.set(4, 4);
+
+		ud.materials.lambert_material.map = skydomeTexture;
+		ud.materials.lambert_material.color = 0x000000;
+		ud.materials.lambert_material.needsUpdate = true;
+		ud.applySkydomeTexture = false;
+	}
+}
+
 /////////////
 /* DISPLAY */
 /////////////
@@ -335,18 +300,13 @@ function render() {
 //////////////////////
 function createCamera() {
 	'use strict';
-	const scaling = 1;
+	const scaling = 2;
 	//perspective camera
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
 	camera.position.x = 70 * scaling;
-	camera.position.y = 70 * scaling;
+	camera.position.y = 100 * scaling;
 	camera.position.z = 70 * scaling;
 	camera.lookAt(0, 40, 0);
-	//camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
-	//camera.position.x = 70 * scaling;
-	//camera.position.y = 20 * scaling;
-	//camera.position.z = 70 * scaling;
-	//camera.lookAt(0,0,0);
 }
 
 /////////////////////
@@ -357,18 +317,14 @@ function createScene() {
 
 	scene = new THREE.Scene();
 
-	scene.add(new THREE.AxesHelper(50));
-	//scene.background = new THREE.Color(0xfffefe);
-
-	createPlaneCanvas();
-	createSkydomeCanvas();
-
-	createPlane();
-	createSkydome();
+	scene.add(new THREE.AxesHelper(250));
 
 	createAmbientLight();
 
-	createOVNI(0, 30, 0);
+	createPlane(0, -5, 0);
+	createSkydome(0, 0, 0);
+
+	createOVNI(0, 120, 0);
 }
 
 ////////////////////////////////
@@ -402,6 +358,9 @@ function animate() {
 	rotateOVNI(delta);
 	moveOVNI(delta);
 	handleOVNILights();
+
+	createPlaneTexture();
+	createSkydomeTexture();
 
 	render();
 
@@ -448,6 +407,12 @@ function onKeyDown(e) {
 		case 83: // S
 		case 115: // s
 			ovni.userData.spotLightChange = true;
+			break;
+		case 49: // 1
+			plane.userData.apllyPlaneTexture = true;
+			break;
+		case 50: // 2
+			skydome.userData.applySkydomeTexture = true;
 			break;
 	}
 
