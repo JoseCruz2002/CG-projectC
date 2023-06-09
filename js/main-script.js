@@ -6,6 +6,7 @@ var scene, renderer, camera;
 var mesh, geometry;
 
 var clock;
+var controls;
 
 var planeTexture, skydomeTexture;
 
@@ -13,13 +14,16 @@ var planeTexture, skydomeTexture;
 var ovni, plane, moon, moonDirectionalLight, isDirectionalLightOn = false, corkTree, skydome;
 
 
+const SCALE = 0.01;
+
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
 function createAmbientLight() {
 	'use strict';
 
-	const light = new THREE.AmbientLight({ color: 0xffe000, intensity: 1 }); // soft white light
+	var light = new THREE.AmbientLight({ color: 0xffe000 }); // soft white light
+	light.intensity = 0.2;
 	scene.add(light);
 }
 
@@ -31,15 +35,15 @@ function createPlane(x, y, z) {
 
 	plane = new THREE.Object3D();
 
-	geometry = new THREE.PlaneGeometry(window.innerWidth / 2, window.innerHeight / 2, 30, 30);
+	geometry = new THREE.PlaneGeometry(600*SCALE, 600*SCALE, 100, 100);
 
 	var disMap = new THREE.TextureLoader().setPath("images/").load("heightmap.png");
 	disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping;
-	disMap.repeat.set(10, 10);
+	disMap.repeat.set(5, 2);
 
-	var lambert_material = new THREE.MeshLambertMaterial({ color: 0x009900, displacementMap: disMap, displacementScale: 200 });
+	var lambert_material = new THREE.MeshLambertMaterial({ color: 0x009900, displacementMap: disMap, displacementScale: 100*SCALE });
 	var phong_material = new THREE.MeshPhongMaterial({ color: 0xffaa22, emissive: 0x242923, specular: 15, shininess: 5 });
-	var toon_material = new THREE.MeshToonMaterial({ color: 0xffaa22 });
+	var toon_material = new THREE.MeshToonMaterial({ color: 0xffaa22});
 
 	plane.userData = {
 		materials: { lambert_material, phong_material, toon_material },
@@ -69,7 +73,7 @@ function createSkydome(x, y, z) {
 		applySkydomeTexture: false
 	}
 
-	geometry = new THREE.SphereGeometry(250, 32, 16, 0, Math.PI * 2, Math.PI, Math.PI);
+	geometry = new THREE.SphereGeometry(250*SCALE, 32, 16, 0, Math.PI * 2, Math.PI, Math.PI);
 	mesh = new THREE.Mesh(geometry, skydome.userData.materials.lambert_material);
 	mesh.position.set(x, y, z);
 	skydome.add(mesh);
@@ -143,30 +147,32 @@ function createOVNI(x, y, z) {
 	var toon_material_cc = new THREE.MeshToonMaterial({ color: 0x323857 });
 	var toon_material_light = new THREE.MeshToonMaterial({ color: 0x610000 });
 
-	var pointLight1 = new THREE.PointLight({ distance: 200 });
-	var pointLight2 = new THREE.PointLight({ distance: 200 });
-	var pointLight3 = new THREE.PointLight({ distance: 200 });
-	var pointLight4 = new THREE.PointLight({ distance: 200 });
+	var pointLight1 = new THREE.PointLight({ distance: 200*SCALE });
+	var pointLight2 = new THREE.PointLight({ distance: 200*SCALE });
+	var pointLight3 = new THREE.PointLight({ distance: 200*SCALE });
+	var pointLight4 = new THREE.PointLight({ distance: 200*SCALE });
 
 	ovni.userData = {
 		materials_body: { lambert_material_body, phong_material_body, toon_material_body },
 		materials_cc: { lambert_material_cc, phong_material_cc, toon_material_cc },
 		materials_light: { lambert_material_light, phong_material_light, toon_material_light },
-		r_body: 5, h_body: 3,
-		r_cockpit: 2,
-		r_cylinder: 2, h_cylinder: 1.5,
-		r_light: 1,
+		r_body: 7*SCALE*3, h_body: 3*SCALE*3,
+		r_cockpit: 2.5*SCALE*3,
+		r_cylinder: 2*SCALE*3, h_cylinder: 1.5*SCALE*3,
+		r_light: 1*SCALE*3,
 		y_rotate: Math.PI / 2,
 		move_plus_x: false, move_minus_x: false, move_plus_z: false, move_minus_z: false,
-		velocity: 30,
+		velocity: 30*SCALE*3,
 		pointLights: [pointLight1, pointLight2, pointLight3, pointLight4],
 		pointLightsChange: false, pointLightsChanged: false,
-		spotLight: new THREE.SpotLight({ color: 0x323857, intensity: 10, distance: 100 }), spotLightChange: false, spotLightChanged: false
+		spotLight: new THREE.SpotLight({ color: 0x323857, intensity: 0.8, distance: 100*SCALE }), spotLightChange: false, spotLightChanged: false
 	};
 
 	scene.add(ovni.userData.spotLight.target);
-	ovni.userData.spotLight.target.position.set(0, -10, 0);
-	ovni.userData.spotLight.angle = Math.PI / 5;
+	ovni.userData.spotLight.target.position.set(0, -10*SCALE, 0);
+	ovni.userData.spotLight.castShadow = true;
+	ovni.userData.spotLight.angle = Math.PI / 10;
+	ovni.userData.spotLight.penumbra = 1.0;
 	scene.add(ovni.userData.spotLight);
 
 	for (let i = 0; i < ovni.userData.pointLights.length; i++) {
@@ -189,15 +195,15 @@ function createOVNI(x, y, z) {
 
 function createMoonBody(obj, x, y, z) {
 	'use strict';
-	
+
 	const moon_material = new THREE.MeshPhongMaterial({
 		color: 0xffd45f, // Set the color to moon yellow
 		emissive: 0xffd45f, // Set the emissive color to moon yellow
 		emissiveIntensity: 0.5, // Increase the emissive intensity for brightness
-	  });
-	  
-	
-	geometry = new THREE.SphereGeometry(5, 32, 32);
+	});
+
+
+	geometry = new THREE.SphereGeometry(20*SCALE, 32, 32);
 	mesh = new THREE.Mesh(geometry, moon_material);
 	mesh.position.set(x, y, z);
 	obj.add(mesh);
@@ -207,94 +213,94 @@ function createMoonBody(obj, x, y, z) {
 function toggleDirectionalLight() {
 	isDirectionalLightOn = !isDirectionalLightOn;
 	moonDirectionalLight.visible = isDirectionalLightOn;
-  }
+}
 
 function createMoonLight(obj, x, y, z) {
 	'use strict';
 	moonDirectionalLight = new THREE.DirectionalLight(0xffd45f, 1);
 	moonDirectionalLight.visible = isDirectionalLightOn;
-    moonDirectionalLight.position.set(x, y, z); // Set the position of the light source
+	moonDirectionalLight.position.set(x, y, z); // Set the position of the light source
 	obj.add(moonDirectionalLight);
-	
+
 }
 
-function createMoon(x, y, z){
+function createMoon(x, y, z) {
 	'use strict';
 
 	moon = new THREE.Object3D();
 
 	createMoonBody(moon, x, y, z);
-	createMoonLight(moon ,1, 1, 1);
-	
+	createMoonLight(moon, 1, 1, 1);
+
 	scene.add(moon);
 }
 
-function createBranchCanopy(obj, x, y, z){
+function createBranchCanopy(obj, x, y, z) {
 	'use strict';
 
 	const darkGreenMaterial = new THREE.MeshBasicMaterial({
 		color: 0x006400
-	  });
-	  
+	});
 
-	geometry = new THREE.SphereGeometry(1.7, 32, 16);
+
+	geometry = new THREE.SphereGeometry(1.7*SCALE, 32, 16);
 	geometry.scale(1.5, 0.5, 0.5);
 	mesh = new THREE.Mesh(geometry, darkGreenMaterial);
-	mesh.position.set(x+3.7, y+7 , z);
+	mesh.position.set(x + 3.7*SCALE, y + 7*SCALE, z);
 	obj.add(mesh);
 }
 
 
-function createTreeCanopy(obj, x, y, z){
+function createTreeCanopy(obj, x, y, z) {
 	'use strict';
 
 	const darkGreenMaterial = new THREE.MeshBasicMaterial({
 		color: 0x006400
-	  });
-	  
+	});
 
-	geometry = new THREE.SphereGeometry(1.7, 32, 16);
-	geometry.scale(2, 0.1, 2);
+
+	geometry = new THREE.SphereGeometry(1.7*SCALE, 32, 16);
+	geometry.scale(2, 1.5, 2);
 	mesh = new THREE.Mesh(geometry, darkGreenMaterial);
-	mesh.position.set(x-2, y+9 , z+1.3);
+	mesh.position.set(x - 2*SCALE, y + 9*SCALE, z + 1.3*SCALE);
 	obj.add(mesh);
 }
 
 
 
 
-function createTreebranch(obj, x, y, z){
+function createTreebranch(obj, x, y, z) {
 	'use strict';
 
 	const brownishOrangeMaterial = new THREE.MeshBasicMaterial({
-  	color: 0xB99571
+		color: 0xB99571
 	});
 
-	geometry = new THREE.CylinderGeometry( 0.5, 0.5, 7, 20 );
+	geometry = new THREE.CylinderGeometry(0.5*SCALE, 0.5*SCALE, 7*SCALE, 20);
 	mesh = new THREE.Mesh(geometry, brownishOrangeMaterial);
-	mesh.position.set(x+1, y +2.5, z-1);
-	mesh.rotation.z = -Math.PI / 6 ;	
-	
+	mesh.position.set(x + 1*SCALE, y + 2.5*SCALE, z - 1*SCALE);
+	mesh.rotation.z = -Math.PI / 6;
+
 	obj.add(mesh);
 }
 
-function createTreeTrunk(obj, x, y, z){
+function createTreeTrunk(obj, x, y, z) {
 	'use strict';
 
 	const brownishOrangeMaterial = new THREE.MeshBasicMaterial({
-  	color: 0xB99571
+		color: 0xB99571
 	});
 
-	geometry = new THREE.CylinderGeometry( 1, 1, 12, 20 );
+	geometry = new THREE.CylinderGeometry(1*SCALE, 1*SCALE, 12*SCALE, 20);
 	mesh = new THREE.Mesh(geometry, brownishOrangeMaterial);
 	mesh.position.set(x, y, z);
-	mesh.rotation.z = Math.PI / 6;	
-	
+	mesh.rotation.z = Math.PI / 6;
+
 	obj.add(mesh);
 }
 
 
-function createCorkTree(x, y, z){
+function createCorkTree(x, y, z) {
 	'use strict';
 
 	corkTree = new THREE.Object3D();
@@ -303,7 +309,7 @@ function createCorkTree(x, y, z){
 	createTreebranch(corkTree, x, y, z);
 	createTreeCanopy(corkTree, x, y, z);
 	createBranchCanopy(corkTree, x, y, z);
-	
+
 	scene.add(corkTree);
 }
 
@@ -424,20 +430,28 @@ function render() {
 //////////////////////
 function createCamera() {
 	'use strict';
-	const scaling = 2;
-	//perspective camera
-	//camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-	//
-	//camera.position.x = 300;
-	//camera.position.y = 500;
-	//camera.position.z = 300;
-	//camera.lookAt(scene.position);
+	const scaling = 2*SCALE;
+	/*	
+		camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+		camera.position.x = 300;
+		camera.position.y = 500;
+		camera.position.z = 300;
+		camera.lookAt(scene.position);
+	*/
 
 	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
-	camera.position.x = 70 * scaling;
-	camera.position.y = 100 * scaling;
-	camera.position.z = 70 * scaling;
+	camera.position.x = 60 * scaling;
+	camera.position.y = 90 * scaling;
+	camera.position.z = 60 * scaling;
+	camera.lookAt(scene.position);
+
+	/*
+	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
+	camera.position.x = 0 * scaling;
+	camera.position.y = 40 * scaling;
+	camera.position.z = 50 * scaling;
 	camera.lookAt(0, 40, 0);
+	*/
 }
 
 /////////////////////
@@ -448,20 +462,17 @@ function createScene() {
 
 	scene = new THREE.Scene();
 
-	scene.add(new THREE.AxesHelper(250));
-
 	createAmbientLight();
-	
 
-	createPlane(0, -5, 0);
+	createPlane(0, -40*SCALE, 0);
 	createSkydome(0, 0, 0);
 
-	createOVNI(0, 120, 0);
+	createOVNI(0, 70*SCALE, 0);
 
-	createMoon(-30,60,30);
-	createCorkTree(0, 0, 40);
-	createCorkTree(40, 0, 0);
-	createCorkTree(40, 0, 40);
+	createMoon(-150*SCALE, 150*SCALE, 30*SCALE);
+	createCorkTree(0, -5*SCALE, 40*SCALE);
+	createCorkTree(40*SCALE, -15*SCALE, 0);
+	createCorkTree(40*SCALE, 0*SCALE, 40*SCALE);
 }
 
 ////////////////////////////////
@@ -471,15 +482,19 @@ function init() {
 	'use strict';
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 
+	renderer.xr.enabled = true;
+	document.body.appendChild(VRButton.createButton(renderer));
+
 	createScene();
 	createCamera();
-	//camera.zoom = 7;
-	//camera.updateProjectionMatrix();
 
 	clock = new THREE.Clock();
+
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 	window.addEventListener("keydown", onKeyDown);
 	window.addEventListener("keyup", onKeyUp);
@@ -503,7 +518,9 @@ function animate() {
 
 	render();
 
-	requestAnimationFrame(animate);
+	controls.update();
+
+	renderer.setAnimationLoop(animate);
 }
 
 ////////////////////////////
@@ -540,9 +557,9 @@ function onKeyDown(e) {
 			ovni.userData.move_plus_x = true;
 			break;
 		case 68: //D
-        case 100: //d
+		case 100: //d
 			toggleDirectionalLight();
-            break;
+			break;
 		case 80: // P
 		case 112: // p
 			ovni.userData.pointLightsChange = true;
