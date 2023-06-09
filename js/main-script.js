@@ -360,6 +360,9 @@ function createWalls(obj, x, y, z){
 		 -1.0 * SCALE, -8.0* SCALE, 8.0* SCALE, //v15 porta, canto inf esq
 		  2.5 * SCALE, 5.0* SCALE, 8.0* SCALE, //v16 porta, canto sup dir
 		  2.5 * SCALE, -8.0* SCALE, 8.0* SCALE, //v17 porta, canto inf dir
+
+		  -10.0 * SCALE, -8.0* SCALE, -3.0* SCALE, //v18 inf
+		  -10.0 * SCALE, 8.0* SCALE, -3.0* SCALE, //v19 sup
   	]); 
 
   	const wallIndices = [
@@ -384,6 +387,11 @@ function createWalls(obj, x, y, z){
 		12, 13, 2,
 		2, 1, 4, 
 		4, 5, 2,
+		2, 5, 4, 
+		4, 18, 5,
+		5, 18, 19,
+		19, 18, 0,
+		0, 3, 19,
   	];
 
   	geometry = new THREE.BufferGeometry();
@@ -420,7 +428,9 @@ function createRoof(obj, x, y, z){
 		0, 4, 3,
 		3, 2, 4,
 		4, 2, 5,
-		5, 2, 1
+		5, 2, 1,
+		1, 2, 5,
+		5, 3, 4
   	];
 
   	geometry = new THREE.BufferGeometry();
