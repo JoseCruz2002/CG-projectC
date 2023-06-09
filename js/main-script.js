@@ -10,7 +10,7 @@ var clock;
 var planeTexture, skydomeTexture;
 
 // objects
-var ovni, plane, moon, moonDirectionalLight, isDirectionalLightOn = false, corkTree, skydome;
+var ovni, plane, moon, moonDirectionalLight, isDirectionalLightOn = false, corkTree, skydome, house;
 
 
 /////////////////////
@@ -308,6 +308,153 @@ function createCorkTree(x, y, z){
 }
 
 
+function createWalls(obj){
+	'use strict';
+
+	const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xf2ecdf });
+	
+	// Create walls
+	const wallVertices = new Float32Array([
+		-10.0, -8.0, 8.0, // v0 esq,inf, parede frontal
+		14.0, -8.0, 8.0, // v1 dir, inf, parede frontal
+		14.0, 8.0, 8.0, // v2 dir, sup, parede frontal
+		-10.0, 8.0, 8.0,  // v3 esq, sup, parede frontal
+
+		14.0, -8.0, -3.0, //v4 inf, parede lateral
+		14.0, 8.0, -3.0, //v5 sup, parede lateral
+
+		-7.0, 5.0, 8.0,  //v6 jan esq, canto sup esq
+		-7.0, 1.0, 8.0, //v7 jan esq, canto inf esq
+		-4.0, 5.0, 8.0,  //v8 jan esq, canto sup dir
+		-4.0, 1.0, 8.0, //v9 jan esq, canto inf dir
+		
+		7.0, 5.0, 8.0,  //v10 jan dir, canto sup esq
+		7.0, 1.0, 8.0, //v11 jan dir, canto inf esq
+		10.0, 5.0, 8.0,  //v12 jan dir, canto sup dir
+		10.0, 1.0, 8.0, //v13 jan dir, canto inf dir
+
+		-1.0, 5.0, 8.0, //v14 porta, canto sup esq
+		-1.0, -8.0, 8.0, //v15 porta, canto inf esq
+		2.5, 5.0, 8.0, //v16 porta, canto sup dir
+		2.5, -8.0, 8.0, //v17 porta, canto inf dir
+  	]);
+
+  	const wallIndices = [
+		0, 7, 3,
+		3, 7, 6,
+		6, 8, 3,
+		3, 8, 14, 
+		14, 8, 9,
+		9, 7, 0,
+		0, 15, 9,
+		9, 15, 14,
+		14, 2, 3, 
+		3, 2, 14,
+		14, 16, 2,
+		2, 16, 10,
+		10, 16, 11,
+		11, 16, 17,
+		17, 1, 11,
+		11, 1, 13,
+		13, 1, 2,
+		2, 10, 12,
+		12, 13, 2,
+		2, 1, 4, 
+		4, 5, 2,
+  	];
+
+  	geometry = new THREE.BufferGeometry();
+  	geometry.setAttribute('position', new THREE.BufferAttribute(wallVertices, 3));
+  	geometry.setIndex(wallIndices);
+
+	geometry.computeVertexNormals();
+
+  	mesh = new THREE.Mesh(geometry, wallMaterial);
+	mesh.position.set(0, 0, 0);
+
+	obj.add(mesh);
+}
+
+
+function createRoof(obj){
+	'use strict';
+
+	const roofMaterial = new THREE.MeshBasicMaterial({ color: 0xc86355 });
+	
+	// Create walls
+	const roofVertices = new Float32Array([
+		14.0, 8.0, 8.0, // v0 dir, sup, parede frontal
+		14.0, 8.0, -3.0, //v1 sup, parede lateral
+		14.0, 12.5, 2.5, //v2 sup dir telhado
+		-10.0, 8.0, 8.0,  // v3 esq, sup, parede frontal
+		-10.0, 12.5, 2.5, //v4 sup esq telhado
+		-10.0, 8.0, -3.0, //v5
+  	]);
+
+  	const roofIndices = [
+		0, 1, 2,
+		2, 3, 0, 
+		0, 4, 3,
+		3, 2, 4,
+		4, 2, 5,
+		5, 2, 1
+  	];
+
+  	geometry = new THREE.BufferGeometry();
+  	geometry.setAttribute('position', new THREE.BufferAttribute(roofVertices, 3));
+  	geometry.setIndex(roofIndices);
+
+	geometry.computeVertexNormals();
+
+  	mesh = new THREE.Mesh(geometry, roofMaterial);
+	mesh.position.set(0, 0, 0);
+
+	obj.add(mesh);
+}
+
+
+function createDoor(obj){
+	'use strict';
+
+	const doorMaterial = new THREE.MeshBasicMaterial({ color: 0x422600 });
+	
+	// Create walls
+	const doorVertices = new Float32Array([
+		-1.0, 5.0, 8.0, //v0 porta, canto sup esq
+		-1.0, -8.0, 8.0, //v1 porta, canto inf esq
+		2.5, 5.0, 8.0, //v2 porta, canto sup dir
+		2.5, -8.0, 8.0, //v3 porta, canto inf dir
+  	]);
+
+  	const doorIndices = [
+		0, 1, 2,
+		2, 1, 3,
+
+  	];
+
+  	geometry = new THREE.BufferGeometry();
+  	geometry.setAttribute('position', new THREE.BufferAttribute(doorVertices, 3));
+  	geometry.setIndex(doorIndices);
+
+	geometry.computeVertexNormals();
+
+  	mesh = new THREE.Mesh(geometry, doorMaterial);
+	mesh.position.set(0, 0, 0);
+
+	obj.add(mesh);
+}
+
+function createhouse(){
+	'use strict';
+
+	house = new THREE.Object3D();
+	
+	createWalls(house);
+	createRoof(house);
+	createDoor(house);
+	scene.add(house);
+}
+
 
 ////////////
 /* UPDATE */
@@ -438,7 +585,7 @@ function createCamera() {
 	camera.position.y = 100 * scaling;
 	camera.position.z = 70 * scaling;
 	camera.lookAt(0, 40, 0);
-}
+}//
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -462,6 +609,7 @@ function createScene() {
 	createCorkTree(0, 0, 40);
 	createCorkTree(40, 0, 0);
 	createCorkTree(40, 0, 40);
+	createhouse();
 }
 
 ////////////////////////////////
@@ -476,8 +624,8 @@ function init() {
 
 	createScene();
 	createCamera();
-	//camera.zoom = 7;
-	//camera.updateProjectionMatrix();
+	camera.zoom = 1.5;
+	camera.updateProjectionMatrix();
 
 	clock = new THREE.Clock();
 
