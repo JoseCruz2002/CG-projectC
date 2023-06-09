@@ -467,6 +467,68 @@ function createDoor(obj, x, y, z){
 	obj.add(mesh);
 }
 
+function createLeftWindow(obj, x, y, z){
+	'use strict';
+
+	const windowMaterial = new THREE.MeshBasicMaterial({ color: 0x422600 });
+	
+	// Create walls
+	const windowVertices = new Float32Array([
+		-7.0 * SCALE, 5.0* SCALE, 8.0* SCALE,  //v6 jan esq, canto sup esq
+		-7.0 * SCALE, 1.0* SCALE, 8.0* SCALE, //v7 jan esq, canto inf esq
+		-4.0 * SCALE, 5.0* SCALE, 8.0* SCALE,  //v8 jan esq, canto sup dir
+		-4.0 * SCALE, 1.0* SCALE, 8.0* SCALE, //v9 jan esq, canto inf dir
+  	]);
+
+  	const windowIndices = [
+		0, 1, 2,
+		2, 1, 3,
+
+  	];
+
+  	geometry = new THREE.BufferGeometry();
+  	geometry.setAttribute('position', new THREE.BufferAttribute(windowVertices, 3));
+  	geometry.setIndex(windowIndices);
+
+	geometry.computeVertexNormals();
+
+  	mesh = new THREE.Mesh(geometry, windowMaterial);
+	mesh.position.set(x, y, z);
+
+	obj.add(mesh);
+}
+
+function createRightWindow(obj, x, y, z){
+	'use strict';
+
+	const windowMaterial = new THREE.MeshBasicMaterial({ color: 0x422600 });
+	
+	// Create walls
+	const windowVertices = new Float32Array([
+		7.0 * SCALE, 5.0* SCALE, 8.0* SCALE,  //v10 jan dir, canto sup esq
+		  7.0 * SCALE, 1.0* SCALE, 8.0* SCALE, //v11 jan dir, canto inf esq
+		 10.0 * SCALE, 5.0* SCALE, 8.0* SCALE,  //v12 jan dir, canto sup dir
+		 10.0 * SCALE, 1.0* SCALE, 8.0* SCALE, //v13 jan dir, canto inf dir
+  	]);
+
+  	const windowIndices = [
+		0, 1, 2,
+		2, 1, 3,
+
+  	];
+
+  	geometry = new THREE.BufferGeometry();
+  	geometry.setAttribute('position', new THREE.BufferAttribute(windowVertices, 3));
+  	geometry.setIndex(windowIndices);
+
+	geometry.computeVertexNormals();
+
+  	mesh = new THREE.Mesh(geometry, windowMaterial);
+	mesh.position.set(x, y, z);
+
+	obj.add(mesh);
+}
+
 function createhouse(x, y, z){
 	'use strict';
 
@@ -475,6 +537,8 @@ function createhouse(x, y, z){
 	createWalls(house, x, y, z);
 	createRoof(house, x, y, z);
 	createDoor(house, x, y, z);
+	createLeftWindow(house, x, y, z);
+	createRightWindow(house, x, y, z);
 	scene.add(house, x, y, z);
 }
 
